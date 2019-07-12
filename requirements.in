@@ -1,0 +1,14 @@
+django
+psycopg2-binary
+sentry-sdk
+dj-database-url
+requests
+requests_toolbelt
+python-dotenv
+zopfli
+
+# For dev
+ipython
+black
+isort
+pip-tools

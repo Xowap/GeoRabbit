@@ -1,0 +1,8 @@
+.idea
+*.un~
+*.swp
+.python-version
+*.pyc
+/dist
+*.egg-info
+.env
