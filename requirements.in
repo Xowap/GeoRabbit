@@ -6,6 +6,9 @@ requests
 requests_toolbelt
 python-dotenv
 zopfli
+django-leaflet
+tqdm
+pendulum
 
 # For dev
 ipython

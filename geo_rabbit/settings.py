@@ -35,12 +35,19 @@ BASE_URL = os.getenv("BASE_URL")
 # --- Apps ---
 
 INSTALLED_APPS = [
+    #
+    # Django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    #
+    # Dependencies
+    "leaflet",
+    #
+    # Internal
     "robbit",
 ]
 
@@ -141,3 +148,9 @@ AWS_S3_OBJECT_PARAMETERS = {"CacheControl": f"max-age={3600 * 24 * 365}"}
 
 if os.getenv("ENABLE_EMAILS") != "yes":
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+# --- Flickr ---
+
+FLICKR_API_KEY = os.getenv("FLICKR_API_KEY")
+FLICKR_BASE_URL = os.getenv("FLICKR_BASE_URL", "https://www.flickr.com/services/rest/")
