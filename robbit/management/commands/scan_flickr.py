@@ -92,7 +92,8 @@ class Command(BaseCommand):
             for page in range(
                 0,
                 min(
-                    info["photos"]["pages"], Flickr.MAX_SEARCH_RESULTS / Flickr.PER_PAGE
+                    int(info["photos"]["pages"]),
+                    int(Flickr.MAX_SEARCH_RESULTS / Flickr.PER_PAGE),
                 ),
             ):
                 photos = f.search(page=page + 1, **kwargs)
