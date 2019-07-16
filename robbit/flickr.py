@@ -1,5 +1,6 @@
 from time import sleep
 from typing import Sequence, Text
+from pendulum import now
 
 from django.conf import settings
 from requests_toolbelt.sessions import BaseUrlSession
@@ -26,6 +27,7 @@ class Flickr:
 
         self.session = BaseUrlSession(base_url)
         self.key = key
+        self.last_call = now()
 
     @classmethod
     def instance(cls) -> "Flickr":
@@ -44,6 +46,9 @@ class Flickr:
         Calls a method on the Flickr API. Pass all additional parameters as
         kwargs to this method. The API key and other details like this will
         be automatically added.
+
+        Also, makes sure that the rate limit is respected by sleeping. The
+        time of the call is deduced from the sleeping time.
         """
 
         params = dict(params)
@@ -52,11 +57,17 @@ class Flickr:
         params["api_key"] = self.key
         params["format"] = "json"
         params["nojsoncallback"] = "1"
+        params["per_page"] = self.PER_PAGE
 
         r = self.session.get("", params=params)
         r.raise_for_status()
 
-        sleep(self.RATE_LIMIT)
+        last_call = self.last_call
+        this_call = now()
+        diff = last_call - this_call
+        self.last_call = this_call
+
+        sleep(max(0, self.RATE_LIMIT - diff.in_seconds()))
 
         return r.json()
 

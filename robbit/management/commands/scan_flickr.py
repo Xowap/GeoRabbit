@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
         tiles = Tile.objects.filter(depth=level, status=Tile.TO_PROBE)
 
-        for tile in tqdm(tiles, unit="tiles"):
+        for tile in tqdm(tiles, unit="tile"):
             if tile.polygon.intersects(area.area):
                 self.handle_tile(tile)
 
@@ -78,7 +78,10 @@ class Command(BaseCommand):
 
         f = Flickr.instance()
 
-        kwargs = {"bbox": tile.bbox, "extras": ["geo", "date_taken"]}
+        kwargs = {
+            "bbox": tile.bbox,
+            "extras": ["geo", "date_taken", "url_q", "url_z", "url_b"],
+        }
         info = f.search(page=1, **kwargs)
         harvest = True
 
@@ -96,7 +99,12 @@ class Command(BaseCommand):
                     int(Flickr.MAX_SEARCH_RESULTS / Flickr.PER_PAGE),
                 ),
             ):
-                photos = f.search(page=page + 1, **kwargs)
+                if page == 0:
+                    photos = info
+                else:
+                    photos = f.search(page=page + 1, **kwargs)
+
+                assert len(photos["photos"]["photo"]) <= Flickr.PER_PAGE
 
                 for photo in photos["photos"]["photo"]:
                     photo_id = int(photo["id"])

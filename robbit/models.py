@@ -53,7 +53,7 @@ class Tile(models.Model):
     https://www.wolframalpha.com/input/?i=360%2F(2%5Ex)+%3D+0.001;+solve+x
     """
 
-    MAX_DEPTH = 18
+    MAX_DEPTH = 19
 
     TO_PROBE = "to-probe"
     CONTAINED = "contained"
@@ -134,7 +134,7 @@ class Tile(models.Model):
         depth = self.depth + 1
 
         if depth > self.MAX_DEPTH:
-            return
+            return False
 
         x2 = self.x * 2
         y2 = self.y * 2
@@ -150,6 +150,8 @@ class Tile(models.Model):
 
         self.status = Tile.SPLIT
         self.save()
+
+        return True
 
     def mark_done(self):
         """
