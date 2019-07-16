@@ -64,7 +64,7 @@ class Flickr:
 
         last_call = self.last_call
         this_call = now()
-        diff = last_call - this_call
+        diff = this_call - last_call
         self.last_call = this_call
 
         sleep(max(0, self.RATE_LIMIT - diff.in_seconds()))
