@@ -53,7 +53,9 @@ class Command(BaseCommand):
         print("")
         print(f"--> Level {level}")
 
-        tiles = Tile.objects.filter(depth=level, status=Tile.TO_PROBE)
+        tiles = Tile.objects.filter(depth=level, status=Tile.TO_PROBE).order_by(
+            "y", "x"
+        )
 
         for tile in tqdm(tiles, unit="tile"):
             if tile.polygon.intersects(area.area):
