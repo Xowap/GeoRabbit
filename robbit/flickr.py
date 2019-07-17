@@ -1,8 +1,8 @@
 from time import sleep
 from typing import Sequence, Text
-from pendulum import now
 
 from django.conf import settings
+from pendulum import now
 from requests_toolbelt.sessions import BaseUrlSession
 
 from .models import BBox
@@ -16,7 +16,7 @@ class Flickr:
     _instance = None
 
     PER_PAGE = 250
-    MAX_SEARCH_RESULTS = PER_PAGE * 4
+    MAX_SEARCH_RESULTS = PER_PAGE * 8
     RATE_LIMIT = 1.0
 
     def __init__(self, base_url: Text, key: Text) -> None:

@@ -119,15 +119,30 @@ class Command(BaseCommand):
                 )
             )
 
-            Image.objects.bulk_create(
-                Image(
-                    flickr_id=int(image["id"]),
-                    coords=Point((float(image["longitude"]), float(image["latitude"]))),
-                    date_taken=pendulum.parse(image["datetaken"], tz="UTC"),
-                    data=image,
-                )
-                for image in to_insert
-                if int(image["id"]) not in existing
-            )
+            def make_images():
+                """
+                This is done in a generator because sometimes you might get
+                a parsing error on an image, in which case you don't want
+                a single image to crash the whole thing.
+                """
+
+                for image in to_insert:
+                    try:
+                        if int(image["id"]) not in existing:
+                            yield Image(
+                                flickr_id=int(image["id"]),
+                                coords=Point(
+                                    (
+                                        float(image["longitude"]),
+                                        float(image["latitude"]),
+                                    )
+                                ),
+                                date_taken=pendulum.parse(image["datetaken"], tz="UTC"),
+                                data=image,
+                            )
+                    except (ValueError, TypeError):
+                        pass
+
+            Image.objects.bulk_create(make_images())
 
             tile.mark_done()

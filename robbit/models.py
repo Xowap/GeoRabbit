@@ -169,7 +169,7 @@ class Image(models.Model):
     """
 
     flickr_id = models.BigIntegerField(unique=True)
-    coords = PointField()
+    coords = PointField(spatial_index=True)
     date_taken = models.DateTimeField(null=True)
     data = JSONField()
 
