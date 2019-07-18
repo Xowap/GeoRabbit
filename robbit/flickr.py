@@ -18,6 +18,7 @@ class Flickr:
     PER_PAGE = 250
     MAX_SEARCH_RESULTS = PER_PAGE * 8
     RATE_LIMIT = 1.0
+    RETRY_WAIT = 10
 
     def __init__(self, base_url: Text, key: Text) -> None:
         """
@@ -59,17 +60,27 @@ class Flickr:
         params["nojsoncallback"] = "1"
         params["per_page"] = self.PER_PAGE
 
-        r = self.session.get("", params=params)
-        r.raise_for_status()
+        r = None
 
-        last_call = self.last_call
-        this_call = now()
-        diff = this_call - last_call
-        self.last_call = this_call
+        for _ in range(0, 100):
+            r = self.session.get("", params=params)
 
-        sleep(max(0, self.RATE_LIMIT - diff.in_seconds()))
+            if r.status_code == 500:
+                sleep(self.RETRY_WAIT)
+            else:
+                r.raise_for_status()
 
-        return r.json()
+                last_call = self.last_call
+                this_call = now()
+                diff = this_call - last_call
+                self.last_call = this_call
+
+                sleep(max(0, self.RATE_LIMIT - diff.in_seconds()))
+
+                return r.json()
+
+        if r:
+            r.raise_for_status()
 
     def search(self, page: int, bbox: BBox, extras: Sequence[Text] = None):
         """

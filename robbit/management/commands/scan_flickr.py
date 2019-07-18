@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
         kwargs = {
             "bbox": tile.bbox,
-            "extras": ["geo", "date_taken", "url_q", "url_z", "url_b"],
+            "extras": ["geo", "date_taken", "url_q", "url_z", "url_b", "count_faves"],
         }
         info = f.search(page=1, **kwargs)
         harvest = True
@@ -141,6 +141,7 @@ class Command(BaseCommand):
                                 ),
                                 date_taken=pendulum.parse(image["datetaken"], tz="UTC"),
                                 data=image,
+                                faves=int(image.get("count_faves", 0)),
                             )
                     except (ValueError, TypeError):
                         pass
