@@ -120,12 +120,12 @@ class Command(BaseCommand):
         harvest = True
 
         if int(info["photos"]["total"]) > Flickr.MAX_SEARCH_RESULTS:
-            harvest = not tile.need_children()
+            harvest = not tile.can_have_children
+
+        seen = set()
+        to_insert = []
 
         if harvest:
-            seen = set()
-            to_insert = []
-
             for page in range(
                 0,
                 min(
@@ -147,32 +147,32 @@ class Command(BaseCommand):
                         seen.add(photo_id)
                         to_insert.append(photo)
 
-            def make_images():
-                """
-                This is done in a generator because sometimes you might get
-                a parsing error on an image, in which case you don't want
-                a single image to crash the whole thing.
-                """
+        def make_images():
+            """
+            This is done in a generator because sometimes you might get
+            a parsing error on an image, in which case you don't want
+            a single image to crash the whole thing.
+            """
 
-                for image in to_insert:
-                    try:
-                        if int(image["id"]) not in existing:
-                            yield Image(
-                                flickr_id=int(image["id"]),
-                                coords=Point(
-                                    (
-                                        float(image["longitude"]),
-                                        float(image["latitude"]),
-                                    )
-                                ),
-                                date_taken=pendulum.parse(image["datetaken"], tz="UTC"),
-                                data=image,
-                                faves=int(image.get("count_faves", 0)),
-                            )
-                    except (ValueError, TypeError):
-                        pass
+            for image in to_insert:
+                try:
+                    if int(image["id"]) not in existing:
+                        yield Image(
+                            flickr_id=int(image["id"]),
+                            coords=Point(
+                                (float(image["longitude"]), float(image["latitude"]))
+                            ),
+                            date_taken=pendulum.parse(image["datetaken"], tz="UTC"),
+                            data=image,
+                            faves=int(image.get("count_faves", 0)),
+                        )
+                except (ValueError, TypeError):
+                    pass
 
-            with self.insert_lock, atomic():
+        with self.insert_lock, atomic():
+            if not harvest:
+                tile.need_children()
+            else:
                 existing = set(
                     Image.objects.filter(flickr_id__in=seen).values_list(
                         "flickr_id", flat=True

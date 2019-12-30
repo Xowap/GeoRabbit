@@ -124,6 +124,14 @@ class Tile(models.Model):
 
         return self.bbox.to_polygon()
 
+    @property
+    def can_have_children(self):
+        """
+        Indicates if this tile can have children
+        """
+
+        return (self.depth + 1) <= self.MAX_DEPTH
+
     def need_children(self) -> bool:
         """
         Call this function if you find that this tile needs children. It will
@@ -131,10 +139,10 @@ class Tile(models.Model):
         that case, False will be returned.
         """
 
-        depth = self.depth + 1
-
-        if depth > self.MAX_DEPTH:
+        if not self.can_have_children:
             return False
+
+        depth = self.depth + 1
 
         x2 = self.x * 2
         y2 = self.y * 2
