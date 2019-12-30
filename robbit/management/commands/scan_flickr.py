@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from multiprocessing.pool import ThreadPool
+from threading import Lock
 from typing import Text
 
 import pendulum
@@ -16,6 +17,10 @@ class Command(BaseCommand):
     """
     This is where the scanning of the whole Flickr database happens.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.insert_lock = Lock()
 
     def get_area(self, slug: Text) -> Area:
         """
@@ -84,10 +89,10 @@ class Command(BaseCommand):
                 pool.imap_unordered(handle_tile, tiles),
                 total=tiles.count(),
                 unit="tile",
+                smoothing=0.01,
             ):
                 pass
 
-    @atomic
     def handle_tile(self, tile: Tile):
         """
         Basically, for each tile two things can happen: either the tile has
@@ -142,12 +147,6 @@ class Command(BaseCommand):
                         seen.add(photo_id)
                         to_insert.append(photo)
 
-            existing = set(
-                Image.objects.filter(flickr_id__in=seen).values_list(
-                    "flickr_id", flat=True
-                )
-            )
-
             def make_images():
                 """
                 This is done in a generator because sometimes you might get
@@ -173,6 +172,13 @@ class Command(BaseCommand):
                     except (ValueError, TypeError):
                         pass
 
-            Image.objects.bulk_create(make_images())
+            with self.insert_lock, atomic():
+                existing = set(
+                    Image.objects.filter(flickr_id__in=seen).values_list(
+                        "flickr_id", flat=True
+                    )
+                )
 
-            tile.mark_done()
+                Image.objects.bulk_create(make_images())
+
+                tile.mark_done()

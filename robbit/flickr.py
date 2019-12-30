@@ -49,7 +49,7 @@ class Flickr:
         self.key_gen_running = False
 
         # Keys-generating thread
-        self.key_gen_thread = Thread(target=self._generate_keys)
+        self.key_gen_thread = Thread(target=self._generate_keys, daemon=True)
 
     @classmethod
     def instance(cls) -> "Flickr":
@@ -120,7 +120,6 @@ class Flickr:
 
         self.key_gen_running = False
         self.keys_queue.empty()
-        self.key_gen_thread.join()
 
     def call(self, method, **params):
         """
