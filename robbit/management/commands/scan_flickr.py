@@ -5,6 +5,7 @@ from typing import Text
 import pendulum
 from django.contrib.gis.geos import Point
 from django.core.management import BaseCommand
+from django.db.transaction import atomic
 from tqdm import tqdm
 
 from ...flickr import Flickr
@@ -86,6 +87,7 @@ class Command(BaseCommand):
             ):
                 pass
 
+    @atomic
     def handle_tile(self, tile: Tile):
         """
         Basically, for each tile two things can happen: either the tile has
