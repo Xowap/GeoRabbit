@@ -152,5 +152,8 @@ if os.getenv("ENABLE_EMAILS") != "yes":
 
 # --- Flickr ---
 
-FLICKR_API_KEY = os.getenv("FLICKR_API_KEY")
+FLICKR_API_KEY = os.getenv("FLICKR_API_KEY", "")
+FLICKR_API_KEYS = [
+    x for x in os.getenv("FLICKR_API_KEYS", "").split(",") + [FLICKR_API_KEY] if x
+]
 FLICKR_BASE_URL = os.getenv("FLICKR_BASE_URL", "https://www.flickr.com/services/rest/")

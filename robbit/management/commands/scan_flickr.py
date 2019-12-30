@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from multiprocessing.pool import ThreadPool
 from typing import Text
 
 import pendulum
@@ -37,10 +38,14 @@ class Command(BaseCommand):
         depth is reached.
         """
 
-        print(f'Getting content for "{area}"')
+        try:
+            print(f'Getting content for "{area}"')
 
-        for level in range(0, Tile.MAX_DEPTH + 1):
-            self.handle_level(level, area)
+            for level in range(0, Tile.MAX_DEPTH + 1):
+                self.handle_level(level, area)
+        finally:
+            f = Flickr.instance()
+            f.stop_generating_keys()
 
     def handle_level(self, level: int, area: Area) -> None:
         """
@@ -48,6 +53,18 @@ class Command(BaseCommand):
         level. If the tile intersects the scanned area then the tile is
         handled, otherwise the scanning is deferred to another scan which would
         require this tile to be scanned.
+
+        Notes
+        -----
+        As the Flickr API is fairly slow and the amount of data to download is
+        pretty big, the Flickr class allows for:
+
+        - Rotating API keys in order to increase the rate limit a little bit
+        - Being called from several threads but still maintain the rate limit
+          on each key
+
+        The parallelism happens at the tiles level: a thread pool will run each
+        tile in a separate thread.
         """
 
         print("")
@@ -57,9 +74,17 @@ class Command(BaseCommand):
             "y", "x"
         )
 
-        for tile in tqdm(tiles, unit="tile"):
+        def handle_tile(tile: Tile):
             if tile.polygon.intersects(area.area):
                 self.handle_tile(tile)
+
+        with ThreadPool(Flickr.instance().keys_count * 3) as pool:
+            for _ in tqdm(
+                pool.imap_unordered(handle_tile, tiles),
+                total=tiles.count(),
+                unit="tile",
+            ):
+                pass
 
     def handle_tile(self, tile: Tile):
         """
