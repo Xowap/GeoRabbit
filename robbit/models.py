@@ -87,8 +87,8 @@ class Tile(models.Model):
             ),
         ],
     )
-    x = models.IntegerField(db_index=True)
-    y = models.IntegerField(db_index=True)
+    x = models.BigIntegerField(db_index=True)
+    y = models.BigIntegerField(db_index=True)
     status = models.CharField(
         max_length=max(len(x) for x, _ in STATUSES),
         choices=STATUSES,
